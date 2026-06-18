@@ -36,7 +36,7 @@ const GALLERY = [
 export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: () => void }) {
   const [services, setServices] = useState<Service[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCategory, setActiveCategory] = useState("Box Braids");
   const [flowOpen, setFlowOpen] = useState(false);
   const [preselectedService, setPreselectedService] = useState<string | undefined>(undefined);
   const [preselectedStylist, setPreselectedStylist] = useState<string | undefined>(undefined);
