@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Money } from "@/components/shared/format";
 import { Badge } from "@/components/ui/badge";
 import { BookingFlow } from "@/components/booking/booking-flow";
+import { TeamSection } from "./team-section";
 
 type Service = {
   id: string; name: string; category: string; description: string;
@@ -38,6 +39,7 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
   const [activeCategory, setActiveCategory] = useState("All");
   const [flowOpen, setFlowOpen] = useState(false);
   const [preselectedService, setPreselectedService] = useState<string | undefined>(undefined);
+  const [preselectedStylist, setPreselectedStylist] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     fetch("/api/services").then(r => r.json()).then(setServices);
@@ -50,6 +52,13 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
     : services.filter(s => s.category === activeCategory);
 
   const openBooking = (serviceId?: string) => {
+    setPreselectedService(serviceId);
+    setPreselectedStylist(undefined);
+    setFlowOpen(true);
+  };
+
+  const openBookingWithStaffer = (stafferName: string, serviceId?: string) => {
+    setPreselectedStylist(stafferName);
     setPreselectedService(serviceId);
     setFlowOpen(true);
   };
@@ -251,6 +260,9 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
         </div>
       </section>
 
+      {/* TEAM SECTION */}
+      <TeamSection onBookStaffer={openBookingWithStaffer} />
+
       {/* GALLERY */}
       <section className="bg-muted/30 py-20">
         <div className="max-w-7xl mx-auto px-5 sm:px-8">
@@ -401,6 +413,7 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
         onOpenChange={setFlowOpen}
         services={services}
         preselectedServiceId={preselectedService}
+        preselectedStylist={preselectedStylist}
       />
     </div>
   );

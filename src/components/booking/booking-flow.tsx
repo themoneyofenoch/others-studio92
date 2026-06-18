@@ -39,12 +39,13 @@ const STEPS = ["Service", "Schedule", "Details", "Payment", "Done"] as const;
 type Step = typeof STEPS[number];
 
 export function BookingFlow({
-  open, onOpenChange, services, preselectedServiceId, onCompleted,
+  open, onOpenChange, services, preselectedServiceId, preselectedStylist, onCompleted,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   services: Service[];
   preselectedServiceId?: string;
+  preselectedStylist?: string;
   onCompleted?: () => void;
 }) {
   const [step, setStep] = useState<Step>("Service");
@@ -66,11 +67,15 @@ export function BookingFlow({
   useEffect(() => {
     if (open) {
       /* eslint-disable react-hooks/set-state-in-effect */
-      setStep(preselectedServiceId ? "Schedule" : "Service");
+      // If both service and stylist preselected → jump straight to schedule
+      // If only service → jump to schedule (stylist can still be changed)
+      // Otherwise → start at Service picker
+      const startStep = (preselectedServiceId || preselectedStylist) ? "Schedule" : "Service";
+      setStep(startStep);
       setServiceId(preselectedServiceId || "");
+      setStylist(preselectedStylist || "Aaliyah");
       setDate(undefined);
       setTime("09:00");
-      setStylist("Aaliyah");
       setCustomerName("");
       setCustomerPhone("");
       setCustomerEmail("");
@@ -81,7 +86,7 @@ export function BookingFlow({
       setConfirmedBooking(null);
       /* eslint-enable react-hooks/set-state-in-effect */
     }
-  }, [open, preselectedServiceId]);
+  }, [open, preselectedServiceId, preselectedStylist]);
 
   const selectedService = services.find(s => s.id === serviceId);
   const depositAmount = selectedService ? Math.round(selectedService.priceFrom * 0.25) : 0;
@@ -92,7 +97,7 @@ export function BookingFlow({
 
   const canProceed = () => {
     if (step === "Service") return !!serviceId;
-    if (step === "Schedule") return !!date && !!time;
+    if (step === "Schedule") return !!serviceId && !!date && !!time;
     if (step === "Details") return !!customerName && !!customerPhone;
     if (step === "Payment") return !!cardNumber && !!cardExp && !!cardCvc;
     return true;
@@ -239,6 +244,22 @@ export function BookingFlow({
                       <span className="text-sm font-medium">{selectedService.name}</span>
                     </div>
                     <button onClick={() => setStep("Service")} className="text-xs text-muted-foreground hover:text-foreground underline">Change</button>
+                  </div>
+                )}
+                {!selectedService && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">Choose a service *</Label>
+                    <Select value={serviceId} onValueChange={setServiceId}>
+                      <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Pick a service…" /></SelectTrigger>
+                      <SelectContent className="max-h-[280px]">
+                        {services.map(s => (
+                          <SelectItem key={s.id} value={s.id}>
+                            <span className="font-medium">{s.name}</span>
+                            <span className="text-xs text-muted-foreground ml-2">· {durationStr(s.durationMin)} · from ${s.priceFrom}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
                 <div className="space-y-1.5">

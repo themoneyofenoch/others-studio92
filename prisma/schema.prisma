@@ -22,6 +22,19 @@ model Service {
   bookings    Booking[]
 }
 
+model Staffer {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  role          String
+  bio           String
+  specialties   String   // CSV of categories this staffer offers
+  imageUrl      String
+  yearsExp      Int      @default(1)
+  booksyStafferId String?
+  createdAt     DateTime @default(now())
+}
+
 model Customer {
   id        String   @id @default(cuid())
   name      String
