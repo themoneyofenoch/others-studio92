@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Money } from "@/components/shared/format";
 import { cn } from "@/lib/utils";
 import { BookingFlow } from "./booking-flow";
+import { CustomersView } from "./customers-view";
 
 type Service = {
   id: string; name: string; category: string; description: string;
@@ -65,6 +66,7 @@ export function BookingDashboard() {
   const [flowOpen, setFlowOpen] = useState(false);
   const [preselectedService, setPreselectedService] = useState<string | undefined>(undefined);
   const [weekOffset, setWeekOffset] = useState(0);
+  const [tab, setTab] = useState<"appointments" | "customers">("appointments");
 
   const load = () => {
     setLoading(true);
@@ -143,26 +145,52 @@ export function BookingDashboard() {
   return (
     <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Booking dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage appointments, services, and stylists in one place.</p>
+          <p className="text-sm text-muted-foreground mt-1">Manage appointments, services, and clients in one place.</p>
         </div>
-        <Button className="rounded-full self-start" onClick={() => openNewBooking()}>
-          <Plus className="w-4 h-4 mr-1.5" /> New booking
-        </Button>
+        {tab === "appointments" && (
+          <Button className="rounded-full self-start" onClick={() => openNewBooking()}>
+            <Plus className="w-4 h-4 mr-1.5" /> New booking
+          </Button>
+        )}
       </div>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-        {[
-          { label: "Today's appointments", value: stats.today, icon: CalendarClock, tone: "text-foreground" },
-          { label: "Upcoming this period", value: stats.upcoming, icon: CalendarCheck2, tone: "text-emerald-600" },
-          { label: "Awaiting payment", value: stats.pendingPayment, icon: Hourglass, tone: "text-amber-600" },
-          { label: "Completed this week", value: stats.completedWeek, icon: CheckCircle2, tone: "text-foreground/70" },
-        ].map((s, i) => (
-          <div key={i} className="p-5 rounded-2xl borderless-card bg-card">
-            <div className="flex items-center justify-between mb-3">
+      {/* Tabs */}
+      <div className="flex items-center gap-1 p-1 rounded-full bg-muted/60 w-fit mb-8">
+        <button
+          onClick={() => setTab("appointments")}
+          className={cn(
+            "px-4 py-1.5 text-sm font-medium rounded-full transition-colors",
+            tab === "appointments" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Appointments
+        </button>
+        <button
+          onClick={() => setTab("customers")}
+          className={cn(
+            "px-4 py-1.5 text-sm font-medium rounded-full transition-colors",
+            tab === "customers" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Clients
+        </button>
+      </div>
+
+      {tab === "appointments" ? (
+        <>
+          {/* Stat cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+            {[
+              { label: "Today's appointments", value: stats.today, icon: CalendarClock, tone: "text-foreground" },
+              { label: "Upcoming this period", value: stats.upcoming, icon: CalendarCheck2, tone: "text-emerald-600" },
+              { label: "Awaiting payment", value: stats.pendingPayment, icon: Hourglass, tone: "text-amber-600" },
+              { label: "Completed this week", value: stats.completedWeek, icon: CheckCircle2, tone: "text-foreground/70" },
+            ].map((s, i) => (
+              <div key={i} className="p-5 rounded-2xl borderless-card bg-card">
+                <div className="flex items-center justify-between mb-3">
               <s.icon className={cn("w-4 h-4", s.tone)} strokeWidth={1.5} />
             </div>
             <div className="text-3xl font-semibold tracking-tight">{s.value}</div>
@@ -389,6 +417,10 @@ export function BookingDashboard() {
           })}
         </div>
       </div>
+        </>
+      ) : (
+        <CustomersView />
+      )}
 
       <BookingFlow
         open={flowOpen}

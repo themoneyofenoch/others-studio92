@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Scissors, LayoutDashboard, Megaphone, Calendar, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,10 +9,13 @@ import { cn } from "@/lib/utils";
 import { SiteLanding } from "@/components/site/landing";
 import { BookingDashboard } from "@/components/booking/dashboard";
 import { MarketingDashboard } from "@/components/marketing/dashboard";
+import { AdminLogin } from "@/components/marketing/admin-login";
 
 type View = "home" | "booking" | "marketing";
 
 export default function Home() {
+  const { data: session, status } = useSession();
+  const isAdmin = status === "authenticated";
   const [view, setView] = useState<View>("home");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -23,7 +27,8 @@ export default function Home() {
   const nav: { key: View; label: string; icon: typeof LayoutDashboard }[] = [
     { key: "home", label: "Studio", icon: Scissors },
     { key: "booking", label: "Bookings", icon: Calendar },
-    { key: "marketing", label: "Marketing", icon: Megaphone },
+    // Marketing is owner-only — hidden from public visitors
+    ...(isAdmin ? [{ key: "marketing" as View, label: "Marketing", icon: Megaphone }] : []),
   ];
 
   return (
@@ -130,7 +135,7 @@ export default function Home() {
           >
             {view === "home" && <SiteLanding onMarketing={() => setView("marketing")} />}
             {view === "booking" && <BookingDashboard />}
-            {view === "marketing" && <MarketingDashboard />}
+            {view === "marketing" && (isAdmin ? <MarketingDashboard /> : <AdminLogin onCancel={() => setView("home")} />)}
           </motion.div>
         </AnimatePresence>
       </main>
