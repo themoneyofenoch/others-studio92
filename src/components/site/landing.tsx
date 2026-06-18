@@ -109,7 +109,7 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
               className="relative aspect-[4/5] sm:aspect-square rounded-3xl overflow-hidden bg-muted"
             >
               <Image
-                src="/gallery/hero-knotless.jpg"
+                src="/gallery/hero-new.jpg"
                 alt="Knotless box braids installed at Studio 92 in Dallas"
                 fill
                 priority
