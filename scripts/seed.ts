@@ -79,7 +79,7 @@ async function main() {
   }
 
   console.log("Seeding bookings (past + upcoming)...");
-  const STATUSES = ["completed", "completed", "completed", "completed", "confirmed", "confirmed", "cancelled", "no_show"];
+  const STATUSES = ["completed", "completed", "completed", "completed", "confirmed", "confirmed", "confirmed", "cancelled", "no_show", "pending_payment"];
   const now = new Date();
   let totalRevenue = 0;
   for (let i = 0; i < 220; i++) {
@@ -93,6 +93,7 @@ async function main() {
     startsAt.setHours(hour, Math.random() < 0.5 ? 0 : 30, 0, 0);
     const status = STATUSES[Math.floor(Math.random() * STATUSES.length)];
     const price = svc.priceFrom + Math.floor(Math.random() * 60);
+    const depositPaid = status === "completed" || status === "confirmed";
     const booking = await db.booking.create({
       data: {
         serviceId: svc.id,
@@ -102,6 +103,9 @@ async function main() {
         durationMin: svc.durationMin,
         status,
         priceQuoted: price,
+        depositPaid,
+        depositAmount: depositPaid ? Math.round(svc.priceFrom * 0.25) : 0,
+        paymentIntentId: depositPaid ? `demo_pi_seed_${i}` : null,
         notes: Math.random() < 0.2 ? "First-time client — confirmed via Instagram DM." : null,
       }
     });

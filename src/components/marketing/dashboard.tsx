@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useSession, signOut } from "next-auth/react";
 import { motion } from "framer-motion";
 import {
   TrendingUp, Users, Target, DollarSign, MousePointerClick,
   Megaphone, Plus, Eye, Percent, ArrowUpRight, ArrowDownRight,
-  Instagram, MessageCircle, Mail, UserPlus, Store, Activity, Pause, Play
+  Instagram, MessageCircle, Mail, UserPlus, Store, Activity, Pause, Play, LogOut
 } from "lucide-react";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip,
@@ -24,6 +25,7 @@ import {
 import { toast } from "sonner";
 import { Money, CompactMoney, CompactNumber, Delta } from "@/components/shared/format";
 import { cn } from "@/lib/utils";
+import { AdminLogin } from "./admin-login";
 
 type Stats = {
   totalRevenue: number;
@@ -64,6 +66,7 @@ const CHANNEL_META: Record<string, { label: string; icon: any; color: string }> 
 const CHART_COLORS = ["#1c1917", "#b45309", "#d97706", "#65a30d", "#7c3aed", "#be185d"];
 
 export function MarketingDashboard() {
+  const { data: session, status } = useSession();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -73,8 +76,15 @@ export function MarketingDashboard() {
     fetch("/api/stats").then(r => r.json()).then(s => { setStats(s); setLoading(false); });
   };
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (status === "authenticated") {
+      load();
+    } else {
+      setLoading(false);
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [status]);
 
   const updateCampaignStatus = async (id: string, status: string) => {
     await fetch("/api/campaigns", {
@@ -84,6 +94,23 @@ export function MarketingDashboard() {
     toast.success(`Campaign ${status === "active" ? "resumed" : "paused"}`);
     load();
   };
+
+  // Loading state during session check
+  if (status === "loading") {
+    return (
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8">
+        <div className="h-8 w-64 bg-muted rounded-lg animate-pulse mb-8" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          {[1,2,3,4].map(i => <div key={i} className="h-28 bg-muted rounded-2xl animate-pulse" />)}
+        </div>
+      </div>
+    );
+  }
+
+  // Not authenticated → show admin login
+  if (status !== "authenticated") {
+    return <AdminLogin />;
+  }
 
   if (loading || !stats) {
     return (
@@ -108,9 +135,19 @@ export function MarketingDashboard() {
             Track revenue, channel performance, and customer retention across campaigns.
           </p>
         </div>
-        <Button className="rounded-full self-start" onClick={() => setDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-1.5" /> New campaign
-        </Button>
+        <div className="flex items-center gap-2 self-start">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/60 text-xs">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span className="text-muted-foreground">Signed in as</span>
+            <span className="font-medium">{session?.user?.name || "Admin"}</span>
+          </div>
+          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => signOut({ callbackUrl: "/" })}>
+            <LogOut className="w-4 h-4 mr-1.5" /> Sign out
+          </Button>
+          <Button className="rounded-full" onClick={() => setDialogOpen(true)}>
+            <Plus className="w-4 h-4 mr-1.5" /> New campaign
+          </Button>
+        </div>
       </div>
 
       {/* KPI cards */}

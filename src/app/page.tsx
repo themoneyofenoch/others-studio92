@@ -72,7 +72,7 @@ export default function Home() {
             <Button
               size="sm"
               className="hidden sm:inline-flex rounded-full px-5"
-              onClick={() => setView("booking")}
+              onClick={() => setView("home")}
             >
               Book now
             </Button>
@@ -109,7 +109,7 @@ export default function Home() {
                     {label}
                   </button>
                 ))}
-                <Button size="sm" className="mt-2 rounded-full" onClick={() => { setView("booking"); setMobileNavOpen(false); }}>
+                <Button size="sm" className="mt-2 rounded-full" onClick={() => { setView("home"); setMobileNavOpen(false); }}>
                   Book now
                 </Button>
               </div>
@@ -128,7 +128,7 @@ export default function Home() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25 }}
           >
-            {view === "home" && <SiteLanding onBook={() => setView("booking")} onMarketing={() => setView("marketing")} />}
+            {view === "home" && <SiteLanding onMarketing={() => setView("marketing")} />}
             {view === "booking" && <BookingDashboard />}
             {view === "marketing" && <MarketingDashboard />}
           </motion.div>

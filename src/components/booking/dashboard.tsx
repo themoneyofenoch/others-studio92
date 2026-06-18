@@ -5,22 +5,18 @@ import { motion } from "framer-motion";
 import {
   Calendar as CalendarIcon, Clock, Plus, Search, Filter, Check, X,
   AlertCircle, User, Phone, Mail, Scissors, ChevronLeft, ChevronRight,
-  CheckCircle2, CalendarCheck2, UserX, CalendarClock
+  CheckCircle2, CalendarCheck2, UserX, CalendarClock, CreditCard, Hourglass
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
-import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Money } from "@/components/shared/format";
 import { cn } from "@/lib/utils";
+import { BookingFlow } from "./booking-flow";
 
 type Service = {
   id: string; name: string; category: string; description: string;
@@ -30,12 +26,13 @@ type Service = {
 type Booking = {
   id: string; status: string; stylist: string; startsAt: string; durationMin: number;
   priceQuoted: number | null; notes: string | null;
+  depositPaid: boolean;
+  depositAmount: number;
   service: Service;
   customer: { id: string; name: string; email: string | null; phone: string | null };
 };
 
 const STYLISTS = ["Aaliyah", "Jasmine", "Porsha", "Tanisha"];
-const TIME_SLOTS = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
 
 function fmtDate(d: string | Date) {
   return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -52,10 +49,11 @@ function durationStr(min: number) {
 }
 
 const STATUS_META: Record<string, { label: string; cls: string; icon: any }> = {
-  confirmed: { label: "Confirmed", cls: "bg-emerald-50 text-emerald-700", icon: CalendarCheck2 },
-  completed: { label: "Completed", cls: "bg-foreground/5 text-foreground/60", icon: CheckCircle2 },
-  cancelled: { label: "Cancelled", cls: "bg-rose-50 text-rose-600", icon: X },
-  no_show:   { label: "No-show",   cls: "bg-amber-50 text-amber-700", icon: UserX },
+  confirmed:        { label: "Confirmed",  cls: "bg-emerald-50 text-emerald-700", icon: CalendarCheck2 },
+  pending_payment:  { label: "Awaiting payment", cls: "bg-amber-50 text-amber-700", icon: Hourglass },
+  completed:        { label: "Completed",  cls: "bg-foreground/5 text-foreground/60", icon: CheckCircle2 },
+  cancelled:        { label: "Cancelled",  cls: "bg-rose-50 text-rose-600", icon: X },
+  no_show:          { label: "No-show",    cls: "bg-amber-50 text-amber-700", icon: UserX },
 };
 
 export function BookingDashboard() {
@@ -64,7 +62,8 @@ export function BookingDashboard() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [flowOpen, setFlowOpen] = useState(false);
+  const [preselectedService, setPreselectedService] = useState<string | undefined>(undefined);
   const [weekOffset, setWeekOffset] = useState(0);
 
   const load = () => {
@@ -109,17 +108,19 @@ export function BookingDashboard() {
   const stats = useMemo(() => {
     const now = new Date();
     const today = now.toDateString();
-    const upcoming = bookings.filter(b => new Date(b.startsAt) >= now && b.status === "confirmed");
-    const todayCount = bookings.filter(b => new Date(b.startsAt).toDateString() === today && b.status === "confirmed").length;
+    const upcoming = bookings.filter(b => new Date(b.startsAt) >= now && (b.status === "confirmed" || b.status === "pending_payment"));
+    const todayCount = bookings.filter(b => new Date(b.startsAt).toDateString() === today && (b.status === "confirmed" || b.status === "pending_payment")).length;
     const completedThisWeek = bookings.filter(b => {
       const d = new Date(b.startsAt);
       return b.status === "completed" && d >= weekStart && d < new Date(weekStart.getTime() + 7 * 86400000);
     }).length;
+    const pendingPayment = bookings.filter(b => b.status === "pending_payment").length;
     return {
       upcoming: upcoming.length,
       today: todayCount,
       completedWeek: completedThisWeek,
       total: bookings.length,
+      pendingPayment,
     };
   }, [bookings, weekStart]);
 
@@ -134,6 +135,11 @@ export function BookingDashboard() {
     }
   };
 
+  const openNewBooking = (serviceId?: string) => {
+    setPreselectedService(serviceId);
+    setFlowOpen(true);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8">
       {/* Header */}
@@ -142,7 +148,7 @@ export function BookingDashboard() {
           <h1 className="text-3xl font-semibold tracking-tight">Booking dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage appointments, services, and stylists in one place.</p>
         </div>
-        <Button className="rounded-full self-start" onClick={() => setDialogOpen(true)}>
+        <Button className="rounded-full self-start" onClick={() => openNewBooking()}>
           <Plus className="w-4 h-4 mr-1.5" /> New booking
         </Button>
       </div>
@@ -152,8 +158,8 @@ export function BookingDashboard() {
         {[
           { label: "Today's appointments", value: stats.today, icon: CalendarClock, tone: "text-foreground" },
           { label: "Upcoming this period", value: stats.upcoming, icon: CalendarCheck2, tone: "text-emerald-600" },
+          { label: "Awaiting payment", value: stats.pendingPayment, icon: Hourglass, tone: "text-amber-600" },
           { label: "Completed this week", value: stats.completedWeek, icon: CheckCircle2, tone: "text-foreground/70" },
-          { label: "Total in view", value: stats.total, icon: CalendarIcon, tone: "text-foreground/70" },
         ].map((s, i) => (
           <div key={i} className="p-5 rounded-2xl borderless-card bg-card">
             <div className="flex items-center justify-between mb-3">
@@ -206,9 +212,10 @@ export function BookingDashboard() {
                       key={b.id}
                       className={cn(
                         "text-[10px] px-1.5 py-1 rounded-md truncate",
-                        isToday ? "bg-background/15" : "bg-card"
+                        isToday ? "bg-background/15" : "bg-card",
+                        b.status === "pending_payment" && !isToday && "ring-1 ring-amber-300"
                       )}
-                      title={`${fmtTime(b.startsAt)} · ${b.customer.name} · ${b.service.name}`}
+                      title={`${fmtTime(b.startsAt)} · ${b.customer.name} · ${b.service.name}${b.status === "pending_payment" ? " (awaiting payment)" : ""}`}
                     >
                       {fmtTime(b.startsAt)} {b.customer.name.split(" ")[0]}
                     </div>
@@ -235,13 +242,14 @@ export function BookingDashboard() {
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="rounded-full bg-muted/50 border-0 h-11 w-[180px]">
+          <SelectTrigger className="rounded-full bg-muted/50 border-0 h-11 w-[200px]">
             <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="confirmed">Confirmed</SelectItem>
+            <SelectItem value="pending_payment">Awaiting payment</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
             <SelectItem value="cancelled">Cancelled</SelectItem>
             <SelectItem value="no_show">No-show</SelectItem>
@@ -303,8 +311,15 @@ export function BookingDashboard() {
                   </div>
                 </div>
                 <div className="md:col-span-1 flex items-center text-sm">{b.stylist}</div>
-                <div className="md:col-span-1 flex items-center text-sm font-medium">
-                  <Money value={b.priceQuoted} />
+                <div className="md:col-span-1 flex items-center">
+                  <div>
+                    <Money value={b.priceQuoted} className="text-sm font-medium" />
+                    {b.depositPaid && (
+                      <div className="text-[10px] text-emerald-600 flex items-center gap-0.5 mt-0.5">
+                        <CreditCard className="w-2.5 h-2.5" /> <Money value={b.depositAmount} />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="md:col-span-2 flex items-center md:justify-end gap-2">
                   <span className={cn("text-[11px] px-2.5 py-1 rounded-full font-medium", meta.cls)}>
@@ -335,6 +350,39 @@ export function BookingDashboard() {
                       </button>
                     </div>
                   )}
+                  {b.status === "pending_payment" && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={async () => {
+                          // Mark as paid (admin override)
+                          await fetch("/api/checkout", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              bookingId: b.id,
+                              amountCents: b.depositAmount * 100,
+                              customerName: b.customer.name,
+                              customerEmail: b.customer.email,
+                              serviceName: b.service.name,
+                            }),
+                          });
+                          toast.success("Marked as paid");
+                          load();
+                        }}
+                        className="p-1.5 rounded-full hover:bg-emerald-50 text-emerald-600"
+                        title="Mark deposit paid"
+                      >
+                        <CreditCard className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => updateStatus(b.id, "cancelled")}
+                        className="p-1.5 rounded-full hover:bg-rose-50 text-rose-500"
+                        title="Cancel"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             );
@@ -342,179 +390,13 @@ export function BookingDashboard() {
         </div>
       </div>
 
-      <NewBookingDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+      <BookingFlow
+        open={flowOpen}
+        onOpenChange={setFlowOpen}
         services={services}
-        onCreated={() => { load(); setDialogOpen(false); toast.success("Booking created — client notified."); }}
+        preselectedServiceId={preselectedService}
+        onCreated={load}
       />
     </div>
-  );
-}
-
-function NewBookingDialog({
-  open, onOpenChange, services, onCreated,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  services: Service[];
-  onCreated: () => void;
-}) {
-  const [serviceId, setServiceId] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [stylist, setStylist] = useState("Aaliyah");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("09:00");
-  const [notes, setNotes] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const selectedService = services.find(s => s.id === serviceId);
-
-  const submit = async () => {
-    if (!serviceId || !customerName || !date) {
-      toast.error("Please fill all required fields.");
-      return;
-    }
-    setSubmitting(true);
-    const startsAt = new Date(`${date}T${time}:00`);
-    const res = await fetch("/api/bookings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        serviceId, customerName, customerPhone, customerEmail, stylist,
-        startsAt: startsAt.toISOString(), notes,
-      }),
-    });
-    setSubmitting(false);
-    if (res.ok) {
-      onCreated();
-      // Reset
-      setServiceId(""); setCustomerName(""); setCustomerPhone("");
-      setCustomerEmail(""); setDate(""); setNotes("");
-    } else {
-      toast.error("Failed to create booking.");
-    }
-  };
-
-  const today = new Date().toISOString().slice(0, 10);
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[520px] rounded-2xl border-0 shadow-xl p-0 overflow-hidden">
-        <DialogHeader className="p-6 pb-3">
-          <DialogTitle className="text-xl">New booking</DialogTitle>
-          <DialogDescription className="text-muted-foreground">
-            Create an appointment. The client will receive a confirmation automatically.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="px-6 pb-2 max-h-[60vh] overflow-y-auto scroll-thin space-y-4">
-          {/* Service */}
-          <div className="space-y-1.5">
-            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Service *</Label>
-            <Select value={serviceId} onValueChange={setServiceId}>
-              <SelectTrigger className="rounded-xl h-11">
-                <SelectValue placeholder="Choose a service…" />
-              </SelectTrigger>
-              <SelectContent className="max-h-[280px]">
-                {services.map(s => (
-                  <SelectItem key={s.id} value={s.id}>
-                    <span className="font-medium">{s.name}</span>
-                    <span className="text-xs text-muted-foreground ml-2">
-                      · {durationStr(s.durationMin)} · from ${s.priceFrom}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Customer */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5 col-span-2">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Client name *</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={customerName} onChange={e => setCustomerName(e.target.value)} className="pl-10 rounded-xl h-11" placeholder="Jane Doe" />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Phone</Label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} className="pl-10 rounded-xl h-11" placeholder="(469) 555-0192" />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 --translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} className="pl-10 rounded-xl h-11" placeholder="jane@email.com" />
-              </div>
-            </div>
-          </div>
-
-          {/* Date / Time / Stylist */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Date *</Label>
-              <Input type="date" value={date} min={today} onChange={e => setDate(e.target.value)} className="rounded-xl h-11" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Time</Label>
-              <Select value={time} onValueChange={setTime}>
-                <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {TIME_SLOTS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5 col-span-2">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Stylist</Label>
-              <Select value={stylist} onValueChange={setStylist}>
-                <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {STYLISTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Notes */}
-          <div className="space-y-1.5">
-            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Notes</Label>
-            <Textarea value={notes} onChange={e => setNotes(e.target.value)} className="rounded-xl min-h-[70px]" placeholder="Hair length, color preferences, allergies…" />
-          </div>
-
-          {/* Summary */}
-          {selectedService && (
-            <div className="p-4 rounded-xl bg-muted/40 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Scissors className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <div className="text-sm font-medium">{selectedService.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {durationStr(selectedService.durationMin)} · {stylist}
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-muted-foreground">from</div>
-                <Money value={selectedService.priceFrom} className="font-semibold" />
-              </div>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter className="p-6 pt-3 gap-2">
-          <Button variant="ghost" className="rounded-full" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button className="rounded-full" onClick={submit} disabled={submitting}>
-            {submitting ? "Creating…" : "Confirm booking"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

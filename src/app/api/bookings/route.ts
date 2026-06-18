@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
   const svc = await db.service.findUnique({ where: { id: serviceId } });
   if (!svc) return NextResponse.json({ error: "Service not found" }, { status: 404 });
 
+  // New bookings start as pending_payment until deposit is paid
   const booking = await db.booking.create({
     data: {
       serviceId,
@@ -50,8 +51,9 @@ export async function POST(req: NextRequest) {
       stylist: stylist || "Aaliyah",
       startsAt: new Date(startsAt),
       durationMin: svc.durationMin,
-      status: "confirmed",
+      status: "pending_payment",
       priceQuoted: svc.priceFrom,
+      depositAmount: Math.round(svc.priceFrom * 0.25), // 25% deposit
       notes,
     },
     include: { service: true, customer: true }

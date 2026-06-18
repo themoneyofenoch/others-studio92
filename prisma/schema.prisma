@@ -33,18 +33,21 @@ model Customer {
 }
 
 model Booking {
-  id          String   @id @default(cuid())
-  serviceId   String
-  customerId  String
-  stylist     String
-  startsAt    DateTime
-  durationMin Int
-  status      String   @default("confirmed") // confirmed | completed | cancelled | no_show
-  notes       String?
-  priceQuoted Float?
-  createdAt   DateTime @default(now())
-  service     Service  @relation(fields: [serviceId], references: [id])
-  customer    Customer @relation(fields: [customerId], references: [id])
+  id             String   @id @default(cuid())
+  serviceId      String
+  customerId     String
+  stylist        String
+  startsAt       DateTime
+  durationMin    Int
+  status         String   @default("confirmed") // confirmed | completed | cancelled | no_show | pending_payment
+  notes          String?
+  priceQuoted    Float?
+  depositPaid    Boolean  @default(false)
+  depositAmount  Float    @default(0)
+  paymentIntentId String?
+  createdAt      DateTime @default(now())
+  service        Service  @relation(fields: [serviceId], references: [id])
+  customer       Customer @relation(fields: [customerId], references: [id])
 }
 
 model Campaign {
