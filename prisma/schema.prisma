@@ -1,0 +1,73 @@
+// Studio 92 Braids — database schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String
+  category    String
+  description String
+  durationMin Int
+  priceFrom   Float
+  imageUrl    String?
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  bookings    Booking[]
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  bookings  Booking[]
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  serviceId   String
+  customerId  String
+  stylist     String
+  startsAt    DateTime
+  durationMin Int
+  status      String   @default("confirmed") // confirmed | completed | cancelled | no_show
+  notes       String?
+  priceQuoted Float?
+  createdAt   DateTime @default(now())
+  service     Service  @relation(fields: [serviceId], references: [id])
+  customer    Customer @relation(fields: [customerId], references: [id])
+}
+
+model Campaign {
+  id         String   @id @default(cuid())
+  name       String
+  channel    String   // instagram | tiktok | referral | email | sms | walk-in
+  status     String   @default("active") // active | paused | ended
+  budget     Float
+  spent      Float    @default(0)
+  reach      Int      @default(0)
+  clicks     Int      @default(0)
+  bookings   Int      @default(0)
+  revenue    Float    @default(0)
+  startsAt   DateTime @default(now())
+  endsAt     DateTime?
+  createdAt  DateTime @default(now())
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  author    String
+  rating    Int
+  text      String
+  source    String   @default("google")
+  createdAt DateTime @default(now())
+}
