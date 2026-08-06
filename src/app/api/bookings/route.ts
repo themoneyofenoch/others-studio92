@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       durationMin: svc.durationMin,
       status: "pending_payment",
       priceQuoted: svc.priceFrom,
-      depositAmount: Math.round(svc.priceFrom * 0.25), // 25% deposit
+      depositAmount: 40, // flat $40 deposit
       notes,
     },
     include: { service: true, customer: true }

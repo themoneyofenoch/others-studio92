@@ -49,8 +49,8 @@ function shell(title: string, bodyHtml: string) {
         ${bodyHtml}
       </div>
       <div style="background:#faf7f4;padding:18px 28px;border-top:1px solid #ece3d8;color:#78716c;font-size:12px;line-height:1.6;">
-        Studio 92 Braids · 9220 Markville Dr, Dallas, TX 75243<br/>
-        (469) 555-0192 · hello@studio92braids.com · @studio92braids
+        Studio 92 Braids · 9560 Skillman St, Suite #114, Dallas, TX 75243<br/>
+        (469) 618-4993 · hello@studio92braids.com · @studio92braids
       </div>
     </div>
   </div>`;
@@ -89,7 +89,7 @@ export async function sendBookingConfirmation(opts: {
     ${detailRow("Deposit paid", `$${opts.depositAmount.toFixed(2)}`)}
     ${detailRow("Booking ref", opts.bookingId.slice(-8).toUpperCase())}
     <p style="color:#57534e;font-size:13px;line-height:1.6;margin:18px 0 0;">
-      Running late or need to reschedule? Call us at <b>(469) 555-0192</b> — we're happy to help.
+      Running late or need to reschedule? Call us at <b>(469) 618-4993</b> — we're happy to help.
     </p>
   `);
   try {
@@ -106,7 +106,7 @@ export async function sendBookingConfirmation(opts: {
         `  • When:    ${when}`,
         `  • Deposit: $${opts.depositAmount.toFixed(2)} (paid)`,
         ``,
-        `— Studio 92 Braids · 9220 Markville Dr, Dallas, TX`,
+        `— Studio 92 Braids · 9560 Skillman St, Suite #114, Dallas, TX`,
       ].join("\n"),
       html,
     });

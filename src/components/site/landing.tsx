@@ -85,17 +85,17 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
               transition={{ duration: 0.6 }}
             >
               <Badge variant="secondary" className="mb-5 rounded-full px-3 py-1.5 text-xs font-medium">
-                <MapPin className="w-3 h-3 mr-1.5" /> North Dallas · Accepting new clients
+                <MapPin className="w-3 h-3 mr-1.5" /> Lake Highlands · Accepting new clients
               </Badge>
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.05]">
-                Braids that<br/>
-                <span className="italic font-light text-foreground/70">respect</span> your scalp.
+                Your braider<br/>
+                <span className="italic font-light text-foreground/70">for life.</span>
               </h1>
               <p className="mt-6 text-lg text-muted-foreground max-w-md leading-relaxed">
-                Knotless box braids, goddess braids, lemonade feed-ins and loc retwists — hand-installed by Dallas stylists who care about tension, edges, and longevity.
+                Master braiders in Lake Highlands, Dallas. Hair included for many styles — knotless, bora bora, box braids, twists and more, hand-installed with care.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Button size="lg" className="rounded-full px-6 h-12 text-sm" onClick={() => openBooking()}>
+                <Button size="lg" className="rounded-full px-6 h-12 text-sm bg-[#D341A2] hover:bg-[#b82f88] text-white" onClick={() => openBooking()}>
                   Book appointment <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
                 <Button size="lg" variant="ghost" className="rounded-full px-6 h-12 text-sm" onClick={() => document.getElementById("services")?.scrollIntoView({ behavior: "smooth" })}>
@@ -200,10 +200,10 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
             <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Our menu</span>
             <h2 className="mt-2 text-4xl sm:text-5xl font-semibold tracking-tight">Services & pricing</h2>
             <p className="mt-3 text-muted-foreground max-w-lg leading-relaxed">
-              Transparent pricing. A 25% deposit secures your slot — balance due at appointment. Final quote depends on hair length, density, and size.
+              Transparent pricing. A $40 deposit secures your slot — balance due at appointment. Final quote depends on hair length, density, and size.
             </p>
           </div>
-          <Button variant="ghost" className="rounded-full self-start" onClick={() => openBooking()}>
+          <Button variant="ghost" className="rounded-full self-start text-[#D341A2]" onClick={() => openBooking()}>
             Book a service <ArrowRight className="w-4 h-4 ml-1.5" />
           </Button>
         </div>
@@ -309,7 +309,7 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
             </h2>
             <div className="mt-6 space-y-4 text-muted-foreground leading-relaxed">
               <p>
-                Studio 92 started in a one-chair suite off Markville Drive with a simple promise: tension-free braids that respect your edges and last for weeks. Today we're a four-stylist team serving clients across the DFW metroplex.
+                Studio 92 started in a one-chair suite with a simple promise: tension-free braids that respect your edges and last for weeks. Today we're a master braider team in Lake Highlands, Dallas, serving clients across the DFW metroplex.
               </p>
               <p>
                 Every install begins with a scalp check and a real conversation about your hair goals, lifestyle, and budget. We don't rush, we don't double-book, and we won't ghost you on appointment day.
@@ -399,11 +399,11 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
                 Ready for braids that<br/>actually last?
               </h2>
               <p className="mt-4 text-background/70 max-w-md leading-relaxed">
-                Book your appointment in under 2 minutes. 25% deposit secures your slot — pay online, rest easy.
+                Book your appointment in under 2 minutes. A $40 deposit secures your slot — pay online, rest easy.
               </p>
             </div>
             <div className="flex flex-col gap-3 w-full sm:w-auto">
-              <Button size="lg" variant="secondary" className="rounded-full px-8 h-12 text-sm" onClick={() => openBooking()}>
+              <Button size="lg" className="rounded-full px-8 h-12 text-sm bg-[#D341A2] hover:bg-[#b82f88] text-white" onClick={() => openBooking()}>
                 <Calendar className="w-4 h-4 mr-1.5" /> Book appointment
               </Button>
               <Button size="lg" variant="ghost" className="rounded-full px-8 h-12 text-sm text-background hover:text-background hover:bg-background/10" onClick={onMarketing}>

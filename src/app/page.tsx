@@ -76,7 +76,7 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <Button
               size="sm"
-              className="hidden sm:inline-flex rounded-full px-5"
+              className="hidden sm:inline-flex rounded-full px-5 bg-[#D341A2] hover:bg-[#b82f88] text-white"
               onClick={() => setView("home")}
             >
               Book now
@@ -155,20 +155,25 @@ export default function Home() {
           <div>
             <h4 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Visit</h4>
             <p className="text-foreground/80 leading-relaxed">
-              9220 Markville Dr<br/>Dallas, TX 75243
+              9560 Skillman St, Suite #114<br/>Dallas, TX 75243
             </p>
           </div>
           <div>
             <h4 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Hours</h4>
             <p className="text-foreground/80 leading-relaxed">
-              Tue–Sat · 9am – 7pm<br/>Sun · 11am – 5pm<br/>Mon · Closed
+              Sun–Thu · 9am – 6pm<br/>Fri–Sat · 7am – 6pm
             </p>
           </div>
           <div>
             <h4 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Connect</h4>
             <p className="text-foreground/80 leading-relaxed">
-              (469) 555-0192<br/>hello@studio92braids.com<br/>@studio92braids
+              (469) 618-4993<br/>hello@studio92braids.com
             </p>
+            <div className="flex gap-3 mt-3">
+              <a href="https://www.instagram.com/studio92braids_/" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-[#D341A2] text-xs">Instagram</a>
+              <a href="https://www.facebook.com/studio92braids/" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-[#D341A2] text-xs">Facebook</a>
+              <a href="https://www.pinterest.com/studio92braids/" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-[#D341A2] text-xs">Pinterest</a>
+            </div>
           </div>
         </div>
         <div className="border-t border-border/30">

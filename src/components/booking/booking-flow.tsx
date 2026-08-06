@@ -89,7 +89,7 @@ export function BookingFlow({
   }, [open, preselectedServiceId, preselectedStylist]);
 
   const selectedService = services.find(s => s.id === serviceId);
-  const depositAmount = selectedService ? Math.round(selectedService.priceFrom * 0.25) : 0;
+  const depositAmount = 40; // flat $40 deposit
   const stepIndex = STEPS.indexOf(step);
 
   const next = () => setStep(STEPS[Math.min(stepIndex + 1, STEPS.length - 1)]);
@@ -164,7 +164,7 @@ export function BookingFlow({
         <div className="px-6 pt-6 pb-3 border-b border-border/30">
           <DialogTitle className="text-xl mb-1">Book your appointment</DialogTitle>
           <DialogDescription className="mb-4">
-            {step === "Done" ? "Your appointment is confirmed." : "Takes less than 2 minutes. 25% deposit secures your slot."}
+            {step === "Done" ? "Your appointment is confirmed." : "Takes less than 2 minutes. A $40 deposit secures your slot."}
           </DialogDescription>
           {step !== "Done" && (
             <div className="flex items-center gap-1.5">
@@ -319,7 +319,7 @@ export function BookingFlow({
                     <Label className="text-xs uppercase tracking-wider text-muted-foreground">Phone *</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} className="pl-10 rounded-xl h-11" placeholder="(469) 555-0192" />
+                      <Input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} className="pl-10 rounded-xl h-11" placeholder="(469) 618-4993" />
                     </div>
                   </div>
                   <div className="space-y-1.5">
@@ -368,7 +368,7 @@ export function BookingFlow({
                       <Money value={selectedService?.priceFrom} />
                     </div>
                     <div className="flex items-center justify-between text-sm font-semibold">
-                      <span>Deposit due now (25%)</span>
+                      <span>Deposit due now ($40)</span>
                       <Money value={depositAmount} />
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
