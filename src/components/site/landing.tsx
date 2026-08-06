@@ -325,7 +325,7 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
               {[
                 { k: "8+ yrs", v: "braiding" },
                 { k: "12k+", v: "installs" },
-                { k: "4 stylists", v: "on team" },
+                { k: "5 stylists", v: "on team" },
               ].map((s, i) => (
                 <div key={i}>
                   <div className="text-2xl font-semibold">{s.k}</div>
