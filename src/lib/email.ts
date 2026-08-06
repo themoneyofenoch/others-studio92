@@ -23,7 +23,7 @@ function getTransporter() {
 }
 
 function fromAddress() {
-  return process.env.EMAIL_FROM || `"Studio 92 Braids" <noreply@studio92braids.com>`;
+  return process.env.EMAIL_FROM || `"Studio 92 Braids" <booking@studio92braids.com>`;
 }
 
 function fmtDateTime(iso: string) {
