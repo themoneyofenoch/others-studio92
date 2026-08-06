@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { db } from "@/lib/db";
+import { sendBookingConfirmation } from "@/lib/email";
 
 /**
  * POST /api/checkout
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
   // ─── DEMO MODE ───────────────────────────────────────────────────────────
   if (!stripeKey) {
     // Simulate processing delay & mark booking paid
-    await db.booking.update({
+    const updated = await db.booking.update({
       where: { id: bookingId },
       data: {
         status: "confirmed",
@@ -32,7 +33,20 @@ export async function POST(req: NextRequest) {
         paymentIntentId: `demo_pi_${Date.now()}`,
         notes: "Deposit paid (demo mode)",
       },
+      include: { service: true, customer: true },
     });
+    // Confirmation email to the customer (best-effort)
+    if (updated.customer.email) {
+      sendBookingConfirmation({
+        to: updated.customer.email,
+        customerName: updated.customer.name,
+        serviceName: updated.service.name,
+        stylist: updated.stylist,
+        startsAt: updated.startsAt.toISOString(),
+        depositAmount: updated.depositAmount,
+        bookingId: updated.id,
+      }).catch(() => {});
+    }
     return NextResponse.json({
       mode: "demo" as const,
       paymentIntentId: `demo_pi_${Date.now()}`,

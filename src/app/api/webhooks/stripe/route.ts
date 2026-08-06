@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { db } from "@/lib/db";
+import { sendBookingConfirmation } from "@/lib/email";
 
 /**
  * POST /api/webhooks/stripe
@@ -57,6 +58,23 @@ export async function POST(req: NextRequest) {
           notes: "Deposit paid (Stripe)",
         },
       });
+
+      // Confirmation email to the customer (best-effort)
+      const booking = await db.booking.findUnique({
+        where: { id: bookingId },
+        include: { service: true, customer: true },
+      });
+      if (booking?.customer.email) {
+        sendBookingConfirmation({
+          to: booking.customer.email,
+          customerName: booking.customer.name,
+          serviceName: booking.service.name,
+          stylist: booking.stylist,
+          startsAt: booking.startsAt.toISOString(),
+          depositAmount: booking.depositAmount,
+          bookingId: booking.id,
+        }).catch(() => {});
+      }
     }
   }
 

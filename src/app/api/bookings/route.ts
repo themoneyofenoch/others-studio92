@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/api-auth";
+import { sendOwnerNotification } from "@/lib/email";
 
 export async function GET(req: NextRequest) {
   const denied = await requireAdmin();
@@ -62,6 +63,21 @@ export async function POST(req: NextRequest) {
     },
     include: { service: true, customer: true }
   });
+
+  // Notify the studio about the new booking (best-effort, never blocks the flow)
+  const notifyTo = process.env.ADMIN_EMAIL;
+  if (notifyTo) {
+    sendOwnerNotification({
+      to: notifyTo,
+      customerName: booking.customer.name,
+      customerPhone: booking.customer.phone,
+      serviceName: booking.service.name,
+      stylist: booking.stylist,
+      startsAt: booking.startsAt.toISOString(),
+      bookingId: booking.id,
+    }).catch(() => {});
+  }
+
   return NextResponse.json(booking);
 }
 
