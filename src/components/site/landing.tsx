@@ -19,7 +19,7 @@ type Review = {
   id: string; author: string; rating: number; text: string; createdAt: string;
 };
 
-const CATEGORIES = ["All", "Knotless Braids", "Box Braids", "Cornrows", "Locs", "Kids", "Extras"];
+const CATEGORIES = ["All", "Braids", "Twists", "Crochet", "Scalp", "Maintenance"];
 
 const GALLERY = [
   { src: "/gallery/gallery-knotless.jpg", label: "Knotless Box Braids" },
@@ -36,7 +36,7 @@ const GALLERY = [
 export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: () => void }) {
   const [services, setServices] = useState<Service[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [activeCategory, setActiveCategory] = useState("Box Braids");
+  const [activeCategory, setActiveCategory] = useState("All");
   const [flowOpen, setFlowOpen] = useState(false);
   const [preselectedService, setPreselectedService] = useState<string | undefined>(undefined);
   const [preselectedStylist, setPreselectedStylist] = useState<string | undefined>(undefined);
@@ -162,13 +162,16 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
           <div className="flex whitespace-nowrap animate-marquee">
             {[...Array(2)].map((_, i) => (
               <div key={i} className="flex items-center gap-12 px-6 text-sm font-medium tracking-wide">
-                <span>Knotless Box Braids</span><span>·</span>
-                <span>Goddess Braids</span><span>·</span>
-                <span>Lemonade Feed-In</span><span>·</span>
-                <span>Loc Retwist</span><span>·</span>
-                <span>Boho Braids</span><span>·</span>
-                <span>Kids Braids</span><span>·</span>
-                <span>Loc Extensions</span><span>·</span>
+                <span>Miracle Knotless</span><span>·</span>
+                <span>Bora Bora</span><span>·</span>
+                <span>Box Braids</span><span>·</span>
+                <span>Tribal Braids</span><span>·</span>
+                <span>Lemonade Braids</span><span>·</span>
+                <span>French Curl</span><span>·</span>
+                <span>Boho Twist</span><span>·</span>
+                <span>Senegalese Twist</span><span>·</span>
+                <span>Crochet</span><span>·</span>
+                <span>Cornrows</span><span>·</span>
               </div>
             ))}
           </div>
