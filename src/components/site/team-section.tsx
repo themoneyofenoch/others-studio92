@@ -115,7 +115,10 @@ export function TeamSection({
       <Dialog open={!!selectedSlug} onOpenChange={(v) => !v && setSelectedSlug(null)}>
         <DialogContent className="sm:max-w-[640px] rounded-2xl border-0 shadow-2xl p-0 overflow-hidden max-h-[90vh]">
           {loadingDetail && (
-            <div className="p-12 text-center text-sm text-muted-foreground">Loading stylist profile…</div>
+            <>
+              <DialogTitle className="sr-only">Staffer profile</DialogTitle>
+              <div className="p-12 text-center text-sm text-muted-foreground">Loading stylist profile…</div>
+            </>
           )}
           {!loadingDetail && stafferServices && (
             <>
