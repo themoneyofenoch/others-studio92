@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireAdmin } from "@/lib/api-auth";
 
 /**
  * GET /api/customers
@@ -9,6 +10,9 @@ import { db } from "@/lib/db";
  *   ?sort=recent|name|spent|visits  — sort order (default: recent)
  */
 export async function GET(req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const search = req.nextUrl.searchParams.get("search")?.toLowerCase().trim();
   const sort = req.nextUrl.searchParams.get("sort") || "recent";
 

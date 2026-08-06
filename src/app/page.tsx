@@ -134,7 +134,7 @@ export default function Home() {
             transition={{ duration: 0.25 }}
           >
             {view === "home" && <SiteLanding onMarketing={() => setView("marketing")} />}
-            {view === "booking" && <BookingDashboard />}
+            {view === "booking" && (isAdmin ? <BookingDashboard /> : <AdminLogin onCancel={() => setView("home")} />)}
             {view === "marketing" && (isAdmin ? <MarketingDashboard /> : <AdminLogin onCancel={() => setView("home")} />)}
           </motion.div>
         </AnimatePresence>

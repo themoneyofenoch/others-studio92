@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import {
   Calendar as CalendarIcon, Clock, Plus, Search, Filter, Check, X,
   AlertCircle, User, Phone, Mail, Scissors, ChevronLeft, ChevronRight,
-  CheckCircle2, CalendarCheck2, UserX, CalendarClock, CreditCard, Hourglass
+  CheckCircle2, CalendarCheck2, UserX, CalendarClock, CreditCard, Hourglass,
+  Pencil, Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,9 @@ import { Money } from "@/components/shared/format";
 import { cn } from "@/lib/utils";
 import { BookingFlow } from "./booking-flow";
 import { CustomersView } from "./customers-view";
+import { ServicesView } from "./services-view";
+import { StaffersView } from "./staffers-view";
+import { AppointmentEditDialog } from "./appointment-edit-dialog";
 
 type Service = {
   id: string; name: string; category: string; description: string;
@@ -66,7 +70,9 @@ export function BookingDashboard() {
   const [flowOpen, setFlowOpen] = useState(false);
   const [preselectedService, setPreselectedService] = useState<string | undefined>(undefined);
   const [weekOffset, setWeekOffset] = useState(0);
-  const [tab, setTab] = useState<"appointments" | "customers">("appointments");
+  const [tab, setTab] = useState<"appointments" | "customers" | "services" | "staffers">("appointments");
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -137,6 +143,20 @@ export function BookingDashboard() {
     }
   };
 
+  const removeBooking = async (id: string) => {
+    try {
+      const res = await fetch(`/api/bookings/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete");
+      toast.success("Appointment deleted.");
+      setConfirmingDelete(null);
+      load();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete appointment.");
+      setConfirmingDelete(null);
+    }
+  };
+
   const openNewBooking = (serviceId?: string) => {
     setPreselectedService(serviceId);
     setFlowOpen(true);
@@ -176,6 +196,24 @@ export function BookingDashboard() {
           )}
         >
           Clients
+        </button>
+        <button
+          onClick={() => setTab("services")}
+          className={cn(
+            "px-4 py-1.5 text-sm font-medium rounded-full transition-colors",
+            tab === "services" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Services
+        </button>
+        <button
+          onClick={() => setTab("staffers")}
+          className={cn(
+            "px-4 py-1.5 text-sm font-medium rounded-full transition-colors",
+            tab === "staffers" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Stylists
         </button>
       </div>
 
@@ -353,6 +391,30 @@ export function BookingDashboard() {
                   <span className={cn("text-[11px] px-2.5 py-1 rounded-full font-medium", meta.cls)}>
                     {meta.label}
                   </span>
+                  <button
+                    onClick={() => setEditingBooking(b)}
+                    className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground"
+                    title="Edit appointment"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  {confirmingDelete === b.id ? (
+                    <button
+                      onClick={() => removeBooking(b.id)}
+                      className="p-1.5 rounded-full bg-rose-600 text-white"
+                      title="Confirm delete"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { setConfirmingDelete(b.id); setTimeout(() => setConfirmingDelete(prev => prev === b.id ? null : prev), 4000); }}
+                      className="p-1.5 rounded-full hover:bg-rose-50 text-rose-500"
+                      title="Delete appointment"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   {b.status === "confirmed" && (
                     <div className="flex items-center gap-1">
                       <button
@@ -418,8 +480,12 @@ export function BookingDashboard() {
         </div>
       </div>
         </>
-      ) : (
+      ) : tab === "customers" ? (
         <CustomersView />
+      ) : tab === "services" ? (
+        <ServicesView />
+      ) : (
+        <StaffersView />
       )}
 
       <BookingFlow
@@ -428,6 +494,14 @@ export function BookingDashboard() {
         services={services}
         preselectedServiceId={preselectedService}
         onCreated={load}
+      />
+
+      <AppointmentEditDialog
+        open={!!editingBooking}
+        onOpenChange={(v) => !v && setEditingBooking(null)}
+        booking={editingBooking}
+        services={services}
+        onSaved={load}
       />
     </div>
   );

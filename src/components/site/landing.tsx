@@ -47,6 +47,12 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
   }, []);
 
   const featured = services.filter(s => s.featured).slice(0, 3);
+  // Keep the curated category order, then append any new categories added by the owner
+  const allCategories = [
+    "All",
+    ...CATEGORIES.slice(1),
+    ...Array.from(new Set(services.map(s => s.category))).filter(c => !CATEGORIES.includes(c)),
+  ];
   const visibleServices = activeCategory === "All"
     ? services
     : services.filter(s => s.category === activeCategory);
@@ -204,7 +210,7 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
 
         {/* Category filter */}
         <div className="flex flex-wrap gap-2 mb-8">
-          {CATEGORIES.map(cat => (
+          {allCategories.map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}

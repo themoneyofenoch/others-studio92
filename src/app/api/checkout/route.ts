@@ -62,6 +62,19 @@ export async function POST(req: NextRequest) {
         },
       },
     ],
+    // Stripe Connect: route the deposit to the owner's connected account (Express),
+    // take the platform commission, and let Stripe ACH the owner's share on the
+    // payout schedule (daily / 2-day). Set STRIPE_CONNECTED_ACCOUNT to enable.
+    ...(process.env.STRIPE_CONNECTED_ACCOUNT
+      ? {
+          payment_intent_data: {
+            transfer_data: { destination: process.env.STRIPE_CONNECTED_ACCOUNT },
+            ...((Number(process.env.PLATFORM_FEE_PERCENT) || 0) > 0
+              ? { application_fee_amount: Math.round(amountCents * ((Number(process.env.PLATFORM_FEE_PERCENT) || 0) / 100)) }
+              : {}),
+          },
+        }
+      : {}),
     metadata: {
       bookingId,
       customerName,

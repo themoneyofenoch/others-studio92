@@ -44,7 +44,7 @@ export function AdminLogin({ onCancel }: { onCancel?: () => void }) {
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">Admin access</h1>
           <p className="text-sm text-muted-foreground mt-2">
-            The marketing dashboard is restricted to Studio 92 staff. Sign in to continue.
+            The studio dashboard is restricted to Studio 92 staff. Sign in to continue.
           </p>
         </div>
 

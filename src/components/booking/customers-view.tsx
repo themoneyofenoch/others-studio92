@@ -5,16 +5,21 @@ import { motion } from "framer-motion";
 import {
   Search, Users, UserPlus, UserCheck, DollarSign, Phone, Mail,
   Calendar as CalendarIcon, Clock, ChevronDown, ChevronUp, AlertCircle, ArrowUpRight,
+  Pencil, Loader2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { Money } from "@/components/shared/format";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 type Customer = {
@@ -58,6 +63,9 @@ export function CustomersView() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("recent");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<Customer | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", phone: "", email: "", notes: "" });
+  const [saving, setSaving] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -93,6 +101,33 @@ export function CustomersView() {
   }, [customers]);
 
   const selectedCustomer = customers.find(c => c.id === selectedId);
+
+  const openEdit = (c: Customer) => {
+    setEditing(c);
+    setEditForm({ name: c.name, phone: c.phone || "", email: c.email || "", notes: c.notes || "" });
+  };
+
+  const saveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/customers/${editing.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Something went wrong");
+      toast.success("Client updated.");
+      setEditing(null);
+      load();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update client.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div>
@@ -283,12 +318,82 @@ export function CustomersView() {
                 <div className="text-xs text-muted-foreground">
                   Avg. ticket: <Money value={selectedCustomer.completedVisits > 0 ? selectedCustomer.totalSpent / selectedCustomer.completedVisits : 0} />
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  First visit: {fmtDate(selectedCustomer.firstVisit)}
+                <div className="flex items-center gap-3">
+                  <div className="text-xs text-muted-foreground">
+                    First visit: {fmtDate(selectedCustomer.firstVisit)}
+                  </div>
+                  <Button size="sm" className="rounded-full h-8" onClick={() => openEdit(selectedCustomer)}>
+                    <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
+                  </Button>
                 </div>
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit customer dialog */}
+      <Dialog open={!!editing} onOpenChange={(v) => !v && setEditing(null)}>
+        <DialogContent className="sm:max-w-[480px] rounded-2xl border-0 shadow-xl p-0 overflow-hidden">
+          <form onSubmit={saveEdit}>
+            <DialogHeader className="p-6 pb-3">
+              <DialogTitle className="text-xl">Edit client</DialogTitle>
+              <DialogDescription className="text-muted-foreground">
+                Update contact details and notes.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="px-6 space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Name *</Label>
+                <Input
+                  required
+                  value={editForm.name}
+                  onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                  className="rounded-xl h-11"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Phone</Label>
+                  <Input
+                    value={editForm.phone}
+                    onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                    placeholder="(469) 555-0100"
+                    className="rounded-xl h-11"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Email</Label>
+                  <Input
+                    type="email"
+                    value={editForm.email}
+                    onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                    placeholder="client@email.com"
+                    className="rounded-xl h-11"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Notes</Label>
+                <Textarea
+                  value={editForm.notes}
+                  onChange={e => setEditForm({ ...editForm, notes: e.target.value })}
+                  placeholder="Preferences, allergies, hair history…"
+                  className="rounded-xl min-h-[70px]"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="p-6 pt-3 gap-2">
+              <Button type="button" variant="ghost" className="rounded-full" onClick={() => setEditing(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" className="rounded-full" disabled={saving}>
+                {saving ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Saving…</> : "Save changes"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
