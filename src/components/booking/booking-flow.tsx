@@ -21,6 +21,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { Money } from "@/components/shared/format";
 import { cn } from "@/lib/utils";
+import { BookingPolicy } from "./booking-policy";
 
 type Service = {
   id: string; name: string; category: string; description: string;
@@ -186,6 +187,7 @@ export function BookingFlow({
         </div>
 
         <div className="max-h-[60vh] overflow-y-auto scroll-thin">
+          <BookingPolicy className="m-6 mb-2" />
           <AnimatePresence mode="wait">
             {/* STEP 1: SERVICE */}
             {step === "Service" && (
