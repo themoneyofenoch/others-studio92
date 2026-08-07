@@ -54,9 +54,16 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
     ...CATEGORIES.slice(1),
     ...Array.from(new Set(services.map(s => s.category))).filter(c => !CATEGORIES.includes(c)),
   ];
-  const visibleServices = activeCategory === "All"
-    ? services
+  const MAX_FRONT_SERVICES = 10;
+  const [showAllServices, setShowAllServices] = useState(false);
+  // Front page shows 10 services: featured first, then the rest. Filtering by category shows the full category.
+  const sortedServices = [...services].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+  const filteredServices = activeCategory === "All"
+    ? sortedServices
     : services.filter(s => s.category === activeCategory);
+  const visibleServices = activeCategory === "All" && !showAllServices
+    ? filteredServices.slice(0, MAX_FRONT_SERVICES)
+    : filteredServices;
 
   const openBooking = (serviceId?: string) => {
     setPreselectedService(serviceId);
@@ -268,6 +275,20 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
             </motion.div>
           ))}
         </div>
+
+        {/* Show all / fewer toggle — front page lists the first 10 */}
+        {activeCategory === "All" && filteredServices.length > MAX_FRONT_SERVICES && (
+          <div className="flex justify-center mt-8">
+            <Button
+              variant="outline"
+              className="rounded-full"
+              onClick={() => setShowAllServices(v => !v)}
+            >
+              {showAllServices ? "Show fewer" : `Show all ${filteredServices.length} services`}
+              <ArrowRight className="w-4 h-4 ml-1.5" />
+            </Button>
+          </div>
+        )}
       </section>
 
       {/* SHOP SECTION */}
