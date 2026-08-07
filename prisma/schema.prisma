@@ -96,6 +96,9 @@ model Product {
   lengthIn    Float?
   weightG     Int?
   price       Float
+  priceBra    Float?
+  priceMidback Float?
+  priceWaist  Float?
   description String?
   imageUrl    String?
   available   Boolean  @default(true)

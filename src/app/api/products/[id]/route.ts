@@ -58,6 +58,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const available = form.get("available");
   if (available !== null) data.available = available !== "false";
 
+  // Length-option prices — empty string clears back to the default ladder
+  const opt = (v: FormDataEntryValue | null): number | null | undefined => {
+    if (v === null) return undefined;
+    return String(v).trim() === "" ? null : Number(v);
+  };
+  for (const [field, label] of [["priceBra", "Bra-length price"], ["priceMidback", "Mid-back price"], ["priceWaist", "Waist price"]] as const) {
+    const v = opt(form.get(field));
+    if (v !== undefined) {
+      if (v !== null && (!Number.isFinite(v) || v < 0)) {
+        return NextResponse.json({ error: `${label} must be a non-negative number` }, { status: 400 });
+      }
+      data[field] = v;
+    }
+  }
+
   const file = form.get("image");
   if (file instanceof File && file.size > 0) {
     const saved = await saveImage(file);

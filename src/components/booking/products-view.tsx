@@ -26,13 +26,16 @@ type Product = {
   lengthIn: number | null;
   weightG: number | null;
   price: number;
+  priceBra: number | null;
+  priceMidback: number | null;
+  priceWaist: number | null;
   description: string | null;
   imageUrl: string | null;
   available: boolean;
 };
 
 const EMPTY_FORM = {
-  name: "", category: "Hair", color: "", lengthIn: "", weightG: "", price: "", description: "", available: true,
+  name: "", category: "Hair", color: "", lengthIn: "", weightG: "", price: "", priceBra: "", priceMidback: "", priceWaist: "", description: "", available: true,
 };
 
 export function ProductsView() {
@@ -76,6 +79,9 @@ export function ProductsView() {
       lengthIn: p.lengthIn ? String(p.lengthIn) : "",
       weightG: p.weightG ? String(p.weightG) : "",
       price: String(p.price),
+      priceBra: p.priceBra ? String(p.priceBra) : "",
+      priceMidback: p.priceMidback ? String(p.priceMidback) : "",
+      priceWaist: p.priceWaist ? String(p.priceWaist) : "",
       description: p.description || "",
       available: p.available,
     });
@@ -109,6 +115,9 @@ export function ProductsView() {
       fd.set("lengthIn", form.lengthIn);
       fd.set("weightG", form.weightG);
       fd.set("price", form.price);
+      fd.set("priceBra", form.priceBra);
+      fd.set("priceMidback", form.priceMidback);
+      fd.set("priceWaist", form.priceWaist);
       fd.set("description", form.description);
       fd.set("available", String(form.available));
       if (photo) fd.set("image", photo);
@@ -284,8 +293,21 @@ export function ProductsView() {
                 <Input type="number" min="1" value={form.weightG} onChange={(e) => setForm({ ...form, weightG: e.target.value })} placeholder="150" className="mt-1.5" />
               </div>
               <div className="col-span-2">
-                <Label>Price (USD) *</Label>
+                <Label>Price — Shoulder (USD) *</Label>
                 <Input type="number" step="0.01" min="0" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="140" required className="mt-1.5" />
+                <p className="text-xs text-muted-foreground mt-1.5">Length options — leave blank to use defaults (+$25 / +$50 / +$90)</p>
+              </div>
+              <div>
+                <Label>Bra-length price</Label>
+                <Input type="number" step="0.01" min="0" value={form.priceBra} onChange={(e) => setForm({ ...form, priceBra: e.target.value })} placeholder="165" className="mt-1.5" />
+              </div>
+              <div>
+                <Label>Mid-back price</Label>
+                <Input type="number" step="0.01" min="0" value={form.priceMidback} onChange={(e) => setForm({ ...form, priceMidback: e.target.value })} placeholder="190" className="mt-1.5" />
+              </div>
+              <div className="col-span-2">
+                <Label>Waist price</Label>
+                <Input type="number" step="0.01" min="0" value={form.priceWaist} onChange={(e) => setForm({ ...form, priceWaist: e.target.value })} placeholder="230" className="mt-1.5" />
               </div>
               <div className="col-span-2">
                 <Label>Description</Label>

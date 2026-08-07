@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { ArrowRight, Phone, Image as ImageIcon, Ruler, Scale } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Phone, Image as ImageIcon, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog, DialogContent, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 import { Money } from "@/components/shared/format";
+import { cn } from "@/lib/utils";
 
 type Product = {
   id: string;
@@ -14,13 +19,34 @@ type Product = {
   lengthIn: number | null;
   weightG: number | null;
   price: number;
+  priceBra: number | null;
+  priceMidback: number | null;
+  priceWaist: number | null;
   description: string | null;
   imageUrl: string | null;
   available: boolean;
 };
 
+type LengthKey = "shoulder" | "bra" | "midback" | "waist";
+
+const LENGTHS: { key: LengthKey; label: string; note: string }[] = [
+  { key: "shoulder", label: "Shoulder", note: "Included" },
+  { key: "bra", label: "Bra-length", note: "+$25" },
+  { key: "midback", label: "Mid-back", note: "+$50" },
+  { key: "waist", label: "Waist", note: "+$90" },
+];
+
+function lengthExtra(p: Product, key: LengthKey): number {
+  if (key === "bra") return p.priceBra ?? 25;
+  if (key === "midback") return p.priceMidback ?? 50;
+  if (key === "waist") return p.priceWaist ?? 90;
+  return 0;
+}
+
 export function ProductsSection() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [selected, setSelected] = useState<Product | null>(null);
+  const [lengthKey, setLengthKey] = useState<LengthKey>("shoulder");
 
   useEffect(() => {
     fetch("/api/products")
@@ -28,6 +54,11 @@ export function ProductsSection() {
       .then(d => setProducts(Array.isArray(d) ? d.filter(p => p.available) : []))
       .catch(() => setProducts([]));
   }, []);
+
+  const openProduct = (p: Product) => {
+    setSelected(p);
+    setLengthKey("shoulder");
+  };
 
   if (products.length === 0) return null;
 
@@ -51,13 +82,15 @@ export function ProductsSection() {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {products.map((p, i) => (
-            <motion.div
+            <motion.button
               key={p.id}
+              type="button"
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.05, duration: 0.4 }}
-              className="rounded-2xl borderless-card bg-background overflow-hidden group"
+              onClick={() => openProduct(p)}
+              className="text-left rounded-2xl borderless-card bg-background overflow-hidden group hover:shadow-lg transition-all"
             >
               <div className="aspect-square bg-muted/50 flex items-center justify-center overflow-hidden">
                 {p.imageUrl ? (
@@ -73,26 +106,105 @@ export function ProductsSection() {
               </div>
               <div className="p-4">
                 <p className="font-semibold leading-snug">{p.name}</p>
-                <p className="text-xs text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                  {p.color && <span>{p.color}</span>}
-                  {p.lengthIn && (
-                    <span className="inline-flex items-center gap-0.5"><Ruler className="w-3 h-3" />{p.lengthIn}&quot;</span>
-                  )}
-                  {p.weightG && (
-                    <span className="inline-flex items-center gap-0.5"><Scale className="w-3 h-3" />{p.weightG}g</span>
-                  )}
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">{p.color || p.category}</p>
                 <div className="flex items-center justify-between mt-3">
-                  <p className="font-semibold text-lg"><Money amount={p.price} /></p>
-                  <a href="tel:+14696184993" className="text-[#D341A2] text-sm font-medium inline-flex items-center">
-                    Order <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                  </a>
+                  <p className="font-semibold text-lg">
+                    <span className="text-[10px] text-muted-foreground font-normal block leading-none">from</span>
+                    <Money amount={p.price} />
+                  </p>
+                  <span className="text-[#D341A2] text-sm font-medium">View options →</span>
                 </div>
               </div>
-            </motion.div>
+            </motion.button>
           ))}
         </div>
       </div>
+
+      {/* Product dialog with length options */}
+      <Dialog open={!!selected} onOpenChange={(v) => !v && setSelected(null)}>
+        <DialogContent className="sm:max-w-[720px] rounded-2xl border-0 shadow-2xl p-0 overflow-hidden max-h-[90vh]">
+          {selected && (
+            <div className="grid sm:grid-cols-2">
+              <div className="relative aspect-square sm:aspect-auto sm:min-h-[420px] bg-muted/50">
+                {selected.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={selected.imageUrl} alt={selected.name} className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <ImageIcon className="w-10 h-10 text-muted-foreground/30" />
+                  </div>
+                )}
+              </div>
+              <div className="p-6 sm:p-8 flex flex-col">
+                <DialogTitle className="text-2xl font-semibold tracking-tight">{selected.name}</DialogTitle>
+                <DialogDescription className="mt-1">
+                  {[selected.color, selected.weightG ? `${selected.weightG}g` : null].filter(Boolean).join(" · ") || selected.category}
+                </DialogDescription>
+                {selected.description && (
+                  <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{selected.description}</p>
+                )}
+
+                {/* Length options */}
+                <div className="mt-6">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/80 mb-2">Length</p>
+                  <div className="space-y-2">
+                    {LENGTHS.map(l => {
+                      const extra = lengthExtra(selected, l.key);
+                      const active = lengthKey === l.key;
+                      return (
+                        <button
+                          key={l.key}
+                          type="button"
+                          onClick={() => setLengthKey(l.key)}
+                          className={cn(
+                            "w-full flex items-center justify-between px-4 py-3 rounded-xl border text-sm transition-colors",
+                            active
+                              ? "border-[#D341A2] bg-[#D341A2]/5"
+                              : "border-border/60 hover:border-[#D341A2]/40"
+                          )}
+                        >
+                          <span className="flex items-center gap-2.5">
+                            <span className={cn(
+                              "w-4 h-4 rounded-full border flex items-center justify-center",
+                              active ? "border-[#D341A2] bg-[#D341A2]" : "border-muted-foreground/40"
+                            )}>
+                              {active && <Check className="w-2.5 h-2.5 text-white" />}
+                            </span>
+                            {l.label}
+                          </span>
+                          <span className={cn("font-medium", extra > 0 ? "text-muted-foreground" : "text-emerald-600")}>
+                            {extra > 0 ? `+$${extra}` : "Included"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-auto pt-6">
+                  <div className="flex items-end justify-between mb-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Price · {LENGTHS.find(l => l.key === lengthKey)?.label}</p>
+                      <p className="text-3xl font-semibold mt-0.5">
+                        <Money amount={selected.price + lengthExtra(selected, lengthKey)} />
+                      </p>
+                    </div>
+                    <Badge variant="secondary" className="rounded-full">Sold at studio</Badge>
+                  </div>
+                  <a href="tel:+14696184993" className="block">
+                    <Button className="rounded-full w-full bg-[#D341A2] hover:bg-[#b82f88] text-white h-12">
+                      <Phone className="w-4 h-4 mr-2" /> Call to order · (469) 618-4993
+                    </Button>
+                  </a>
+                  <p className="text-center text-xs text-muted-foreground mt-3">
+                    Reserve your bundle by phone — we&apos;ll have it ready for your install.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

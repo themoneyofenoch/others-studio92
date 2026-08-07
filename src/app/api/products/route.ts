@@ -34,6 +34,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Weight must be a positive number (grams)" }, { status: 400 });
   }
 
+  // Length-option prices (Shoulder is the base price). Blank = UI falls back to +$25/+$50/+$90.
+  const opt = (v: FormDataEntryValue | null): number | null =>
+    v === null || String(v).trim() === "" ? null : Number(v);
+  const priceBra = opt(form.get("priceBra"));
+  const priceMidback = opt(form.get("priceMidback"));
+  const priceWaist = opt(form.get("priceWaist"));
+  for (const [label, v] of [["Bra-length price", priceBra], ["Mid-back price", priceMidback], ["Waist price", priceWaist]] as const) {
+    if (v !== null && (!Number.isFinite(v) || v < 0)) {
+      return NextResponse.json({ error: `${label} must be a non-negative number` }, { status: 400 });
+    }
+  }
+
   let imageUrl: string | null = null;
   if (file instanceof File && file.size > 0) {
     const saved = await saveImage(file);
@@ -49,6 +61,9 @@ export async function POST(req: NextRequest) {
       lengthIn,
       weightG,
       price,
+      priceBra,
+      priceMidback,
+      priceWaist,
       description,
       imageUrl,
       available,
