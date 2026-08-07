@@ -20,7 +20,7 @@ type Review = {
   id: string; author: string; rating: number; text: string; createdAt: string;
 };
 
-const CATEGORIES = ["All", "Braids", "Twists", "Crochet", "Scalp", "Maintenance"];
+const CATEGORIES = ["All", "Knotless", "Boho", "Cornrows", "Twists", "Crochet", "Bora Bora", "Box Braids", "French Curl", "Lemonade", "Tribal / Fulani", "Sew-in", "Takedown"];
 
 const GALLERY = [
   { src: "/gallery/gallery-knotless.jpg", label: "Knotless Box Braids" },
