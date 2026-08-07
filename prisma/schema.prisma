@@ -87,3 +87,18 @@ model Review {
   source    String   @default("google")
   createdAt DateTime @default(now())
 }
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  category    String   @default("Hair")
+  color       String?
+  lengthIn    Float?
+  weightG     Int?
+  price       Float
+  description String?
+  imageUrl    String?
+  available   Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+}

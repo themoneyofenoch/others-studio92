@@ -9,6 +9,7 @@ import { Money } from "@/components/shared/format";
 import { Badge } from "@/components/ui/badge";
 import { BookingFlow } from "@/components/booking/booking-flow";
 import { TeamSection } from "./team-section";
+import { ProductsSection } from "./products-section";
 
 type Service = {
   id: string; name: string; category: string; description: string;
@@ -268,6 +269,9 @@ export function SiteLanding({ onMarketing }: { onBook: () => void; onMarketing: 
           ))}
         </div>
       </section>
+
+      {/* SHOP SECTION */}
+      <ProductsSection />
 
       {/* TEAM SECTION */}
       <TeamSection onBookStaffer={openBookingWithStaffer} />

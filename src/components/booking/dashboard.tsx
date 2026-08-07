@@ -21,6 +21,7 @@ import { BookingFlow } from "./booking-flow";
 import { CustomersView } from "./customers-view";
 import { ServicesView } from "./services-view";
 import { StaffersView } from "./staffers-view";
+import { ProductsView } from "./products-view";
 import { AppointmentEditDialog } from "./appointment-edit-dialog";
 
 type Service = {
@@ -70,7 +71,7 @@ export function BookingDashboard() {
   const [flowOpen, setFlowOpen] = useState(false);
   const [preselectedService, setPreselectedService] = useState<string | undefined>(undefined);
   const [weekOffset, setWeekOffset] = useState(0);
-  const [tab, setTab] = useState<"appointments" | "customers" | "services" | "staffers">("appointments");
+  const [tab, setTab] = useState<"appointments" | "customers" | "services" | "staffers" | "products">("appointments");
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
 
@@ -214,6 +215,15 @@ export function BookingDashboard() {
           )}
         >
           Stylists
+        </button>
+        <button
+          onClick={() => setTab("products")}
+          className={cn(
+            "px-4 py-1.5 text-sm font-medium rounded-full transition-colors",
+            tab === "products" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Products
         </button>
       </div>
 
@@ -484,6 +494,8 @@ export function BookingDashboard() {
         <CustomersView />
       ) : tab === "services" ? (
         <ServicesView />
+      ) : tab === "products" ? (
+        <ProductsView />
       ) : (
         <StaffersView />
       )}
