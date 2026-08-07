@@ -46,6 +46,21 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Add-ons: JSON array of {label, price} — empty/null means the default list in the UI
+  let addons: string | null = null;
+  const rawAddons = form.get("addons");
+  if (rawAddons !== null && String(rawAddons).trim() !== "") {
+    try {
+      const parsed = JSON.parse(String(rawAddons));
+      if (!Array.isArray(parsed) || parsed.some(a => !a?.label || !Number.isFinite(Number(a.price)) || Number(a.price) < 0)) {
+        return NextResponse.json({ error: "Add-ons must be a JSON array of {label, price}" }, { status: 400 });
+      }
+      addons = JSON.stringify(parsed.map((a: any) => ({ label: String(a.label), price: Number(a.price) })));
+    } catch {
+      return NextResponse.json({ error: "Add-ons must be valid JSON" }, { status: 400 });
+    }
+  }
+
   let imageUrl: string | null = null;
   if (file instanceof File && file.size > 0) {
     const saved = await saveImage(file);
@@ -64,6 +79,7 @@ export async function POST(req: NextRequest) {
       priceBra,
       priceMidback,
       priceWaist,
+      addons,
       description,
       imageUrl,
       available,

@@ -99,6 +99,7 @@ model Product {
   priceBra    Float?
   priceMidback Float?
   priceWaist  Float?
+  addons      String? // JSON: [{label, price}] — null = default add-on list
   description String?
   imageUrl    String?
   available   Boolean  @default(true)

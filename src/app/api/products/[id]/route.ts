@@ -73,6 +73,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
   }
 
+  // Add-ons: JSON array of {label, price} — empty string clears to the default list
+  const rawAddons = form.get("addons");
+  if (rawAddons !== null) {
+    const v = String(rawAddons).trim();
+    if (v === "") {
+      data.addons = null;
+    } else {
+      try {
+        const parsed = JSON.parse(v);
+        if (!Array.isArray(parsed) || parsed.some(a => !a?.label || !Number.isFinite(Number(a.price)) || Number(a.price) < 0)) {
+          return NextResponse.json({ error: "Add-ons must be a JSON array of {label, price}" }, { status: 400 });
+        }
+        data.addons = JSON.stringify(parsed.map((a: any) => ({ label: String(a.label), price: Number(a.price) })));
+      } catch {
+        return NextResponse.json({ error: "Add-ons must be valid JSON" }, { status: 400 });
+      }
+    }
+  }
+
   const file = form.get("image");
   if (file instanceof File && file.size > 0) {
     const saved = await saveImage(file);

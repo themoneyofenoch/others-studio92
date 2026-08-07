@@ -22,6 +22,7 @@ type Product = {
   priceBra: number | null;
   priceMidback: number | null;
   priceWaist: number | null;
+  addons: string | null;
   description: string | null;
   imageUrl: string | null;
   available: boolean;
@@ -36,6 +37,26 @@ const LENGTHS: { key: LengthKey; label: string; note: string }[] = [
   { key: "waist", label: "Waist", note: "+$90" },
 ];
 
+type Addon = { label: string; price: number };
+
+const DEFAULT_ADDONS: Addon[] = [
+  { label: "Extra fullness", price: 30 },
+  { label: "Human hair upgrade (pending confirmation)", price: 60 },
+  { label: "Wash & prep", price: 25 },
+  { label: "Takedown of old style", price: 100 },
+  { label: "Beads & charms", price: 20 },
+];
+
+function productAddons(p: Product): Addon[] {
+  if (!p.addons) return DEFAULT_ADDONS;
+  try {
+    const parsed = JSON.parse(p.addons);
+    return Array.isArray(parsed) ? parsed : DEFAULT_ADDONS;
+  } catch {
+    return DEFAULT_ADDONS;
+  }
+}
+
 function lengthExtra(p: Product, key: LengthKey): number {
   if (key === "bra") return p.priceBra ?? 25;
   if (key === "midback") return p.priceMidback ?? 50;
@@ -47,6 +68,7 @@ export function ProductsSection() {
   const [products, setProducts] = useState<Product[]>([]);
   const [selected, setSelected] = useState<Product | null>(null);
   const [lengthKey, setLengthKey] = useState<LengthKey>("shoulder");
+  const [selectedAddons, setSelectedAddons] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetch("/api/products")
@@ -58,7 +80,20 @@ export function ProductsSection() {
   const openProduct = (p: Product) => {
     setSelected(p);
     setLengthKey("shoulder");
+    setSelectedAddons(new Set());
   };
+
+  const toggleAddon = (i: number) => {
+    setSelectedAddons(prev => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i); else next.add(i);
+      return next;
+    });
+  };
+
+  const addonTotal = selected
+    ? [...selectedAddons].reduce((sum, i) => sum + (productAddons(selected)[i]?.price ?? 0), 0)
+    : 0;
 
   if (products.length === 0) return null;
 
@@ -110,7 +145,7 @@ export function ProductsSection() {
                 <div className="flex items-center justify-between mt-3">
                   <p className="font-semibold text-lg">
                     <span className="text-[10px] text-muted-foreground font-normal block leading-none">from</span>
-                    <Money amount={p.price} />
+                    <Money value={p.price} />
                   </p>
                   <span className="text-[#D341A2] text-sm font-medium">View options →</span>
                 </div>
@@ -181,12 +216,51 @@ export function ProductsSection() {
                   </div>
                 </div>
 
+                {/* Add-ons */}
+                {productAddons(selected).length > 0 && (
+                  <div className="mt-6">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-foreground/80 mb-2">Add-ons</p>
+                    <div className="space-y-2">
+                      {productAddons(selected).map((a, i) => {
+                        const active = selectedAddons.has(i);
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => toggleAddon(i)}
+                            className={cn(
+                              "w-full flex items-center justify-between px-4 py-3 rounded-xl border text-sm transition-colors",
+                              active
+                                ? "border-[#D341A2] bg-[#D341A2]/5"
+                                : "border-border/60 hover:border-[#D341A2]/40"
+                            )}
+                          >
+                            <span className="flex items-center gap-2.5">
+                              <span className={cn(
+                                "w-4 h-4 rounded border flex items-center justify-center",
+                                active ? "border-[#D341A2] bg-[#D341A2]" : "border-muted-foreground/40"
+                              )}>
+                                {active && <Check className="w-2.5 h-2.5 text-white" />}
+                              </span>
+                              {a.label}
+                            </span>
+                            <span className="font-medium text-muted-foreground">+${a.price}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div className="mt-auto pt-6">
                   <div className="flex items-end justify-between mb-4">
                     <div>
-                      <p className="text-xs text-muted-foreground">Price · {LENGTHS.find(l => l.key === lengthKey)?.label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Price · {LENGTHS.find(l => l.key === lengthKey)?.label}
+                        {selectedAddons.size > 0 && ` + ${selectedAddons.size} add-on${selectedAddons.size > 1 ? "s" : ""}`}
+                      </p>
                       <p className="text-3xl font-semibold mt-0.5">
-                        <Money amount={selected.price + lengthExtra(selected, lengthKey)} />
+                        <Money value={selected.price + lengthExtra(selected, lengthKey) + addonTotal} />
                       </p>
                     </div>
                     <Badge variant="secondary" className="rounded-full">Sold at studio</Badge>

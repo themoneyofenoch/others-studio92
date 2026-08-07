@@ -29,13 +29,14 @@ type Product = {
   priceBra: number | null;
   priceMidback: number | null;
   priceWaist: number | null;
+  addons: string | null;
   description: string | null;
   imageUrl: string | null;
   available: boolean;
 };
 
 const EMPTY_FORM = {
-  name: "", category: "Hair", color: "", lengthIn: "", weightG: "", price: "", priceBra: "", priceMidback: "", priceWaist: "", description: "", available: true,
+  name: "", category: "Hair", color: "", lengthIn: "", weightG: "", price: "", priceBra: "", priceMidback: "", priceWaist: "", addons: "", description: "", available: true,
 };
 
 export function ProductsView() {
@@ -82,6 +83,12 @@ export function ProductsView() {
       priceBra: p.priceBra ? String(p.priceBra) : "",
       priceMidback: p.priceMidback ? String(p.priceMidback) : "",
       priceWaist: p.priceWaist ? String(p.priceWaist) : "",
+      addons: (() => {
+        try {
+          const parsed = p.addons ? JSON.parse(p.addons) : null;
+          return Array.isArray(parsed) ? parsed.map((a: any) => `${a.label}|${a.price}`).join("\n") : "";
+        } catch { return ""; }
+      })(),
       description: p.description || "",
       available: p.available,
     });
@@ -118,6 +125,12 @@ export function ProductsView() {
       fd.set("priceBra", form.priceBra);
       fd.set("priceMidback", form.priceMidback);
       fd.set("priceWaist", form.priceWaist);
+      fd.set("addons", form.addons.trim() === ""
+        ? ""
+        : JSON.stringify(form.addons.split("\n").map(l => {
+            const [label, price] = l.split("|").map(x => (x || "").trim());
+            return { label, price: Number(price) };
+          }).filter(a => a.label)));
       fd.set("description", form.description);
       fd.set("available", String(form.available));
       if (photo) fd.set("image", photo);
@@ -214,7 +227,7 @@ export function ProductsView() {
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between mt-3">
-                  <p className="font-semibold text-lg"><Money amount={p.price} /></p>
+                  <p className="font-semibold text-lg"><Money value={p.price} /></p>
                   <div className="flex gap-1">
                     <Button variant="outline" size="sm" className="rounded-full px-2.5 h-8" onClick={() => openEdit(p)}>
                       <Pencil className="w-3.5 h-3.5" />
@@ -308,6 +321,17 @@ export function ProductsView() {
               <div className="col-span-2">
                 <Label>Waist price</Label>
                 <Input type="number" step="0.01" min="0" value={form.priceWaist} onChange={(e) => setForm({ ...form, priceWaist: e.target.value })} placeholder="230" className="mt-1.5" />
+              </div>
+              <div className="col-span-2">
+                <Label>Add-ons (one per line: name | price)</Label>
+                <Textarea
+                  value={form.addons}
+                  onChange={(e) => setForm({ ...form, addons: e.target.value })}
+                  placeholder={"Extra fullness|30\nHuman hair upgrade (pending confirmation)|60\nWash & prep|25\nTakedown of old style|100\nBeads & charms|20"}
+                  className="mt-1.5"
+                  rows={5}
+                />
+                <p className="text-xs text-muted-foreground mt-1.5">Leave empty to use the default add-on list.</p>
               </div>
               <div className="col-span-2">
                 <Label>Description</Label>
